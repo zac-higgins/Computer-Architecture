@@ -15,6 +15,10 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = 0
+        self.branchtable = {}
+        self.branchtable[162] = self.multiply
+        self.branchtable[130] = self.ldi
+        self.branchtable[71] = self.prn
 
     def load(self):
         """Load a program into memory."""
@@ -63,27 +67,31 @@ class CPU:
 
         print()
 
-    def run(self):
-        """Run the CPU."""
-        self.load()
-        halted = False
+    def multiply(self, a, b):
+        multiple = self.reg[a] * self.reg[b]
+        self.reg[a] = multiple
+        self.pc += 3
 
+    def ldi(self, a, b):
+        self.reg[a] = b
+        self.pc += 3
+
+    def prn(self, a, b):
+        print(self.reg[a])
+        self.pc += 2
+
+    def run(self):
+        halted = False
         while not halted:
             instruction = self.ram_read(self.pc)
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
-            if instruction == LDI:
-                self.reg[operand_a] = operand_b
-                self.pc += 3
-            if instruction == PRN:
-                print(self.reg[operand_a])
-                self.pc += 2
-            if instruction == MUL:
-                multiple = self.reg[operand_a] * self.reg[operand_b]
-                self.reg[operand_a] = multiple
-                self.pc += 3
-            if instruction == 0:
-                self.pc += 1
-                continue
             if instruction == HLT:
                 halted = True
+            else:
+                self.branchtable[instruction](operand_a, operand_b)
+
+# cpu = CPU()
+
+# cpu.load()
+# print(cpu.ram)
