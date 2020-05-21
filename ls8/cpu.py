@@ -15,10 +15,13 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = 0
+        self.sp = 0xf3 #243
         self.branchtable = {}
         self.branchtable[162] = self.multiply
         self.branchtable[130] = self.ldi
         self.branchtable[71] = self.prn
+        self.branchtable[70] = self.pop
+        self.branchtable[69] = self.push
 
     def load(self):
         """Load a program into memory."""
@@ -30,6 +33,17 @@ class CPU:
                 command = line.split("#", 1)[0]
                 self.ram[address] = int(command, 2)
                 address += 1
+
+    def push(self, a, b):
+        self.sp -= 1
+        self.ram[self.sp] = self.reg[a]
+        self.pc += 2
+
+    def pop(self, a, b):
+        value = self.ram[self.sp]
+        self.reg[a] = value
+        self.sp += 1
+        self.pc += 2
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
