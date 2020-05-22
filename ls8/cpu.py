@@ -16,7 +16,6 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0
         self.sp = 0xf3 #243
-        self.next_function_address = 0
         self.branchtable = {}
         self.branchtable[162] = self.multiply
         self.branchtable[130] = self.ldi
@@ -89,18 +88,18 @@ class CPU:
         self.pc += 2
 
     def call(self, a, b):
-        self.next_function_address = self.pc + 2
+        next_function_address = self.pc + 2
         self.pc = self.reg[a]
         while self.ram[self.pc] != 0:
             instruction = self.ram[self.pc]
             if instruction != 17:
                 self.branchtable[instruction](self.ram[self.pc + 1], self.ram[self.pc + 2])
             elif instruction == 17:
-                self.pc = self.next_function_address
+                self.ret(next_function_address)
                 break
 
-    def ret(self, a, b):
-        self.pc = self.next_function_address
+    def ret(self, next_function_address, b=None):
+        self.pc = next_function_address
 
     def add(self, a, b):
         # print("a", a)
