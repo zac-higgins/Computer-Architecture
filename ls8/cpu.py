@@ -16,12 +16,16 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0
         self.sp = 0xf3 #243
+        self.next_function_address = 0
         self.branchtable = {}
         self.branchtable[162] = self.multiply
         self.branchtable[130] = self.ldi
         self.branchtable[71] = self.prn
         self.branchtable[70] = self.pop
         self.branchtable[69] = self.push
+        self.branchtable[80] = self.call
+        self.branchtable[160] = self.add
+        self.branchtable[17] = self.ret
 
     def load(self):
         """Load a program into memory."""
@@ -34,16 +38,6 @@ class CPU:
                 self.ram[address] = int(command, 2)
                 address += 1
 
-    def push(self, a, b):
-        self.sp -= 1
-        self.ram[self.sp] = self.reg[a]
-        self.pc += 2
-
-    def pop(self, a, b):
-        value = self.ram[self.sp]
-        self.reg[a] = value
-        self.sp += 1
-        self.pc += 2
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -92,6 +86,37 @@ class CPU:
 
     def prn(self, a, b):
         print(self.reg[a])
+        self.pc += 2
+
+    def call(self, a, b):
+        self.next_function_address = self.pc + 2
+        self.pc = self.reg[a]
+        while self.ram[self.pc] != 0:
+            instruction = self.ram[self.pc]
+            if instruction != 17:
+                self.branchtable[instruction](self.ram[self.pc + 1], self.ram[self.pc + 2])
+            elif instruction == 17:
+                self.pc = self.next_function_address
+                break
+
+    def ret(self, a, b):
+        self.pc = self.next_function_address
+
+    def add(self, a, b):
+        # print("a", a)
+        # print("b", b)
+        self.reg[a] += self.reg[b]
+        self.pc += 3
+
+    def push(self, a, b):
+        self.sp -= 1
+        self.ram[self.sp] = self.reg[a]
+        self.pc += 2
+
+    def pop(self, a, b):
+        value = self.ram[self.sp]
+        self.reg[a] = value
+        self.sp += 1
         self.pc += 2
 
     def run(self):
