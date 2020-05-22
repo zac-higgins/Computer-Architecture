@@ -16,6 +16,7 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0
         self.sp = 0xf3 #243
+        self.equal = 0
         self.branchtable = {}
         self.branchtable[162] = self.multiply
         self.branchtable[130] = self.ldi
@@ -25,6 +26,32 @@ class CPU:
         self.branchtable[80] = self.call
         self.branchtable[160] = self.add
         self.branchtable[17] = self.ret
+        self.branchtable[167] = self.comp
+        self.branchtable[84] = self.jmp
+        self.branchtable[85] = self.jeq
+        self.branchtable[86] = self.jne
+
+    def jne(self, register, b=None):
+        if self.equal == 0:
+            self.pc = self.reg[register]
+        else:
+            self.pc += 2
+
+    def jeq(self, register, b=None):
+        if self.equal == 1:
+            self.pc = self.reg[register]
+        else:
+            self.pc += 2
+
+    def jmp(self, register, b=None):
+        self.pc = self.reg[register]
+
+    def comp(self, registerA, registerB):
+        if self.reg[registerA] == self.reg[registerB]:
+            self.equal = 1
+        else:
+            self.equal = 0
+        self.pc += 3
 
     def load(self):
         """Load a program into memory."""
@@ -102,8 +129,6 @@ class CPU:
         self.pc = next_function_address
 
     def add(self, a, b):
-        # print("a", a)
-        # print("b", b)
         self.reg[a] += self.reg[b]
         self.pc += 3
 
@@ -128,8 +153,3 @@ class CPU:
                 halted = True
             else:
                 self.branchtable[instruction](operand_a, operand_b)
-
-# cpu = CPU()
-
-# cpu.load()
-# print(cpu.ram)
